@@ -1,0 +1,15 @@
+{
+  "name": "chatnest",
+  "version": "1.0.0",
+  "description": "Your cozy corner for conversations.",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Saniyaj Mallik, Sombhu Das, Pritam Paul, Sk Sajed, Shuvra Patra",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
