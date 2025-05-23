@@ -1,8 +1,8 @@
 import express from 'express';
 import 'dotenv/config';
 import http from 'http';
-import { Server } from 'socket.io';
 import cors from 'cors';
+import setupSocket from './socket.js';
 
 //--------------- imports end here -----------------------||
 
@@ -28,18 +28,8 @@ app.use(express.json());
 
 
 
-// Socket.io  
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-  transports: ['websocket', 'polling'],
-});
-
-io.on('connection', (socket) => {
-  console.log('A user connected', socket.id);
-});
+// Remove the Socket.io setup here and use the imported function
+const io = setupSocket(server);
 
 //--------------- socket.io end here ---------------------||
 
