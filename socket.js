@@ -17,8 +17,13 @@ export default function setupSocket(server) {
     // You can add more socket event handlers here
 
     socket.on('global message', (msg) => {
-      // Broadcast the message to all clients, including userId
-      io.emit('global message', { userId: msg.userId, text: msg.text });
+      // Broadcast the message to all clients, including user info and timestamp
+      io.emit('global message', msg);
+    });
+
+    socket.on('typing', (typingData) => {
+      // Broadcast typing status to all except the sender
+      socket.broadcast.emit('typing', typingData);
     });
 
     socket.on('disconnect', () => {
