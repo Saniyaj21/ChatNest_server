@@ -18,7 +18,7 @@ export const saveGlobalMessage = async (messageData) => {
 // Get all global messages
 export const getAllGlobalMessages = async (req, res) => {
   try {
-    const messages = await GlobalMessage.find();
+    const messages = await GlobalMessage.find().sort({ createdAt: -1 });
     res.status(200).json(messages);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch global messages' });
