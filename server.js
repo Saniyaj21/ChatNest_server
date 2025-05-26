@@ -4,6 +4,7 @@ import http from 'http';
 import cors from 'cors';
 import setupSocket from './socket.js';
 import { connectDB } from './db/connect.js';
+import globalMessagesRouter from './routes/globalMessages.js';
 
 //--------------- imports end here -----------------------||
 
@@ -46,6 +47,9 @@ app.get('/', (req, res) => {
 });
 
 //--------------- routes end here ------------------------||
+
+// Global Messages Route
+app.use('/api/global-messages', globalMessagesRouter);
 
 
 
