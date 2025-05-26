@@ -3,6 +3,7 @@ import 'dotenv/config';
 import http from 'http';
 import cors from 'cors';
 import setupSocket from './socket.js';
+import { connectDB } from './db/connect.js';
 
 //--------------- imports end here -----------------------||
 
@@ -11,6 +12,7 @@ import setupSocket from './socket.js';
 const app = express();
 const PORT = 8080;
 const server = http.createServer(app);
+connectDB()
 
 // Middleware
 app.use(cors({
