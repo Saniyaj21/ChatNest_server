@@ -5,6 +5,7 @@ import cors from 'cors';
 import setupSocket from './socket.js';
 import { connectDB } from './db/connect.js';
 import globalMessagesRouter from './routes/globalMessages.js';
+import userRouter from './routes/user.js';
 
 //--------------- imports end here -----------------------||
 
@@ -50,6 +51,8 @@ app.get('/', (req, res) => {
 
 // Global Messages Route
 app.use('/api/global-messages', globalMessagesRouter);
+// User Route
+app.use('/api/user', userRouter);
 
 
 
