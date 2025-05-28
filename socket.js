@@ -71,8 +71,14 @@ export default function setupSocket(server) {
 
 		//--------------- groupTyping event start here ----------||
 		socket.on('groupTyping', (typingData) => {
+			// Validate groupId
+			if (!typingData.groupId) {
+				console.error('Missing groupId in typing event');
+				return;
+			}
 			// Broadcast typing status to all in the group except the sender
-			socket.broadcast.to(`group:${typingData.groupId}`).emit('groupTyping', typingData);
+			socket.broadcast.to(`group:${typingData.groupId}`).emit(`groupTyping:${typingData.groupId}`, typingData);
+			console.log(`Broadcasting typing status for group ${typingData.groupId}:`, typingData);
 		});
 		//--------------- groupTyping event end here ------------||
 
