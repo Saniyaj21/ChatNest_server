@@ -117,4 +117,34 @@ export const rejectInvite = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+// GET /groups/:groupId/members - get all members of a group
+export const getGroupMembers = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    if (!groupId) return res.status(400).json({ error: 'groupId is required' });
+
+    // Find all accepted members of the group
+    const memberships = await GroupMember.find({ 
+      groupId, 
+      status: 'accepted' 
+    }).populate('userId');
+
+    console.log(memberships);
+    
+    // Format the response
+    const members = memberships.map(membership => ({
+      _id: membership.userId._id,
+      name: membership.userId.userName,
+      email: membership.userId.userEmail,
+      userAvatar: membership.userId.userAvatar,
+      joinedAt: membership.createdAt
+    }));
+
+    res.status(200).json({ members });
+  } catch (error) {
+    console.error('Error fetching group members:', error);
+    res.status(500).json({ error: error.message });
+  }
 }; 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { createGroup, getAcceptedGroups, getPendingInvites, acceptInvite, rejectInvite } from '../controllers/groupController.js';
+import { createGroup, getAcceptedGroups, getPendingInvites, acceptInvite, rejectInvite, getGroupMembers } from '../controllers/groupController.js';
 
 const router = express.Router();
 
@@ -13,5 +13,7 @@ router.get('/invites', getPendingInvites);
 router.post('/invites/accept', acceptInvite);
 // POST /groups/invites/reject - reject a group invite
 router.post('/invites/reject', rejectInvite);
+// GET /groups/:groupId/members - get all members of a group
+router.get('/:groupId/members', getGroupMembers);
 
 export default router; 
