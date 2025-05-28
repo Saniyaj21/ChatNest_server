@@ -38,4 +38,22 @@ export const createGroup = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+// GET /groups/accepted?userId=... - get groups where user is accepted member
+export const getAcceptedGroups = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+    const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const memberships = await GroupMember.find({ userId: user._id, status: 'accepted' }).populate('groupId');
+    const groups = memberships.map(m => {
+      const g = m.groupId;
+      return g ? { _id: g._id, name: g.name, createdBy: g.createdBy, createdAt: g.createdAt } : null;
+    }).filter(Boolean);
+    res.status(200).json({ groups });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 }; 
