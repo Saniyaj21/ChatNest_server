@@ -6,6 +6,7 @@ import setupSocket from './socket.js';
 import { connectDB } from './db/connect.js';
 import globalMessagesRouter from './routes/globalMessages.js';
 import userRouter from './routes/user.js';
+import groupRouter from './routes/group.js';
 
 //--------------- imports end here -----------------------||
 
@@ -53,6 +54,8 @@ app.get('/', (req, res) => {
 app.use('/api/global-messages', globalMessagesRouter);
 // User Route
 app.use('/api/user', userRouter);
+// Group Route
+app.use('/api/groups', groupRouter);
 
 
 

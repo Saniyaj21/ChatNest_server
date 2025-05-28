@@ -43,4 +43,24 @@ export const updateUserProfile = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+// GET /user/search?email=... - search users by email (partial, case-insensitive)
+export const searchUsersByEmail = async (req, res) => {
+  try {
+    const { email, excludeUserId } = req.query;
+    console.log('Received search query:', { email, excludeUserId });
+    if (!email) return res.status(400).json({ error: 'email query is required' });
+    const query = {
+      userEmail: { $regex: email, $options: 'i' },
+    };
+    if (excludeUserId) {
+      query.userId = { $ne: excludeUserId };
+    }
+    const users = await User.find(query, '_id name userName userEmail userAvatar');
+    console.log('Found users:', users);
+    res.status(200).json({ users });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 }; 
