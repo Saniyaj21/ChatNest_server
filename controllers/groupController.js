@@ -56,4 +56,65 @@ export const getAcceptedGroups = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+};
+
+// GET /groups/invites?userId=... - get pending invites for a user
+export const getPendingInvites = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    console.log('userId', userId);
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+    const user = await User.findOne({ userId });
+    console.log('user', user);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const invites = await GroupMember.find({ userId: user._id, status: 'pending' })
+      .populate('groupId')
+      .populate('invitedBy');
+    // Format invites with group and inviter info
+    console.log('invites', invites);
+    const formatted = invites.map(invite => ({
+      inviteId: invite._id,
+      groupId: invite.groupId?._id,
+      groupName: invite.groupId?.name,
+      invitedBy: invite.invitedBy?.name || '',
+      invitedById: invite.invitedBy?._id,
+      createdAt: invite.createdAt,
+    }));
+    res.status(200).json({ invites: formatted });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// POST /groups/invites/accept - accept a group invite
+export const acceptInvite = async (req, res) => {
+  try {
+    const { groupId, userId } = req.body;
+    if (!groupId || !userId) return res.status(400).json({ error: 'groupId and userId are required' });
+    const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const membership = await GroupMember.findOne({ groupId, userId: user._id, status: 'pending' });
+    if (!membership) return res.status(404).json({ error: 'Invite not found' });
+    membership.status = 'accepted';
+    await membership.save();
+    res.status(200).json({ message: 'Invite accepted' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// POST /groups/invites/reject - reject a group invite
+export const rejectInvite = async (req, res) => {
+  try {
+    const { groupId, userId } = req.body;
+    if (!groupId || !userId) return res.status(400).json({ error: 'groupId and userId are required' });
+    const user = await User.findOne({ userId });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const membership = await GroupMember.findOne({ groupId, userId: user._id, status: 'pending' });
+    if (!membership) return res.status(404).json({ error: 'Invite not found' });
+    await membership.deleteOne();
+    res.status(200).json({ message: 'Invite rejected' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 }; 
