@@ -8,6 +8,11 @@ const globalMessageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  user_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
+  },
   userName: {
     type: String,
     required: true,

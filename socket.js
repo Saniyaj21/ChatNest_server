@@ -1,6 +1,7 @@
 //--------------- imports start here -----------------------||
 import { Server } from 'socket.io';
 import { saveGlobalMessage } from './controllers/globalMessageController.js';
+import { saveGroupMessage } from './controllers/groupMessageController.js';
 //--------------- imports end here -------------------------||
 
 
@@ -45,14 +46,21 @@ export default function setupSocket(server) {
 		});
 		//--------------- globalMessage event end here ----------||
 
-
-
-
-
-
-
-
-
+		//--------------- groupMessage event start here --------||
+		socket.on('groupMessage', async (msg) => {
+			try {
+				console.log('Received group message:', msg);
+				// Save the message to the database
+				const savedMessage = await saveGroupMessage(msg);
+				console.log('Saved group message:', savedMessage);
+				// Broadcast the message to all clients in the group
+				io.emit(`groupMessage:${msg.groupId}`, msg);
+				console.log('Broadcasted message to group:', msg.groupId);
+			} catch (err) {
+				console.error('Failed to save group message:', err);
+			}
+		});
+		//--------------- groupMessage event end here ----------||
 
 		//--------------- typing event start here ---------------||
 		socket.on('typing', (typingData) => {
@@ -61,9 +69,26 @@ export default function setupSocket(server) {
 		});
 		//--------------- typing event end here -----------------||
 
+		//--------------- groupTyping event start here ----------||
+		socket.on('groupTyping', (typingData) => {
+			// Broadcast typing status to all in the group except the sender
+			socket.broadcast.to(`group:${typingData.groupId}`).emit('groupTyping', typingData);
+		});
+		//--------------- groupTyping event end here ------------||
 
+		//--------------- joinGroup event start here ------------||
+		socket.on('joinGroup', (groupId) => {
+			socket.join(`group:${groupId}`);
+			console.log(`User ${socket.id} joined group ${groupId}`);
+		});
+		//--------------- joinGroup event end here --------------||
 
-
+		//--------------- leaveGroup event start here -----------||
+		socket.on('leaveGroup', (groupId) => {
+			socket.leave(`group:${groupId}`);
+			console.log(`User ${socket.id} left group ${groupId}`);
+		});
+		//--------------- leaveGroup event end here -------------||
 
 		//--------------- getActiveUsers event start here -------||
 		socket.on('getActiveUsers', () => {
@@ -71,11 +96,6 @@ export default function setupSocket(server) {
 			socket.emit('activeUsers', activeConnections.size);
 		});
 		//--------------- getActiveUsers event end here ---------||
-
-
-
-
-
 
 		//--------------- disconnect event start here -----------||
 		socket.on('disconnect', () => {

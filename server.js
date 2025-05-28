@@ -7,6 +7,8 @@ import { connectDB } from './db/connect.js';
 import globalMessagesRouter from './routes/globalMessages.js';
 import userRouter from './routes/user.js';
 import groupRouter from './routes/group.js';
+import groupMessagesRouter from './routes/groupMessages.js';
+
 
 //--------------- imports end here -----------------------||
 
@@ -56,6 +58,8 @@ app.use('/api/global-messages', globalMessagesRouter);
 app.use('/api/user', userRouter);
 // Group Route
 app.use('/api/groups', groupRouter);
+// Group Messages Route
+app.use('/api/group-messages', groupMessagesRouter);
 
 
 
