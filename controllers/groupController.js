@@ -3,6 +3,7 @@ import GroupMember from '../models/GroupMember.js';
 import User from '../models/User.js';
 import { deleteAllMessagesForGroup } from './groupMessageController.js';
 import GroupMessage from '../models/GroupMessage.js';
+import { getSocketIO } from '../socketInstance.js';
 
 // POST /groups - create group and send invites
 export const createGroup = async (req, res) => {
@@ -34,6 +35,11 @@ export const createGroup = async (req, res) => {
         invitedBy: creator._id,
       }));
       await GroupMember.insertMany(inviteDocs);
+    }
+    // Emit socket event after group creation
+    const io = getSocketIO();
+    if (io) {
+      io.emit('groupCreated', { group });
     }
     res.status(201).json({ group });
   } catch (error) {

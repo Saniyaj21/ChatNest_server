@@ -2,6 +2,7 @@
 import { Server } from 'socket.io';
 import { saveGlobalMessage } from './controllers/globalMessageController.js';
 import { saveGroupMessage } from './controllers/groupMessageController.js';
+import { setSocketIO } from './socketInstance.js';
 //--------------- imports end here -------------------------||
 
 
@@ -18,9 +19,7 @@ export default function setupSocket(server) {
 	// Group members tracking: { groupId: Map<userId, userObject> }
 	const groupMembers = {};
 
-
-
-
+	setSocketIO(io);
 
 	//--------------- socket.io connection start here --------||
 	io.on('connection', (socket) => {
@@ -136,6 +135,10 @@ export default function setupSocket(server) {
 		// Attach user info to socket on connection (for disconnect cleanup)
 		socket.on('setUser', (user) => {
 			socket.user = user;
+		});
+
+		socket.on('groupCreated', (data) => {
+			io.emit('refreshGroupsSidebar', data);
 		});
 	});
 	//--------------- socket.io connection end here ----------||
