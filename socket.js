@@ -15,6 +15,8 @@ export default function setupSocket(server) {
 		transports: ['websocket', 'polling'],
 	});
 	const activeConnections = new Set();
+	// Group members tracking: { groupId: Map<userId, userObject> }
+	const groupMembers = {};
 
 
 
@@ -83,16 +85,36 @@ export default function setupSocket(server) {
 		//--------------- groupTyping event end here ------------||
 
 		//--------------- joinGroup event start here ------------||
-		socket.on('joinGroup', (groupId) => {
+		socket.on('joinGroup', ({ groupId, user }) => {
+			if (!user || !user.userId) {
+				console.error('joinGroup: missing user or userId', { groupId, user });
+				return;
+			}
 			socket.join(`group:${groupId}`);
-			console.log(`User ${socket.id} joined group ${groupId}`);
+			if (!groupMembers[groupId]) groupMembers[groupId] = new Map();
+			groupMembers[groupId].set(user.userId, user);
+			// Attach group info to socket for cleanup on disconnect
+			if (!socket.joinedGroups) socket.joinedGroups = new Set();
+			socket.joinedGroups.add(groupId);
+			// Broadcast updated group members
+			io.to(`group:${groupId}`).emit('groupActiveUsers', Array.from(groupMembers[groupId].values()));
+			console.log(`User ${user.userId} joined group ${groupId}`);
 		});
 		//--------------- joinGroup event end here --------------||
 
 		//--------------- leaveGroup event start here -----------||
-		socket.on('leaveGroup', (groupId) => {
+		socket.on('leaveGroup', ({ groupId, user }) => {
+			if (!user || !user.userId) {
+				console.error('leaveGroup: missing user or userId', { groupId, user });
+				return;
+			}
 			socket.leave(`group:${groupId}`);
-			console.log(`User ${socket.id} left group ${groupId}`);
+			if (groupMembers[groupId]) {
+				groupMembers[groupId].delete(user.userId);
+				io.to(`group:${groupId}`).emit('groupActiveUsers', Array.from(groupMembers[groupId].values()));
+			}
+			if (socket.joinedGroups) socket.joinedGroups.delete(groupId);
+			console.log(`User ${user.userId} left group ${groupId}`);
 		});
 		//--------------- leaveGroup event end here -------------||
 
@@ -105,15 +127,25 @@ export default function setupSocket(server) {
 
 		//--------------- disconnect event start here -----------||
 		socket.on('disconnect', () => {
+			// Remove user from all groups they joined
+			if (socket.joinedGroups && socket.joinedGroups.size > 0 && socket.user) {
+				socket.joinedGroups.forEach((groupId) => {
+					if (groupMembers[groupId]) {
+						groupMembers[groupId].delete(socket.user.userId);
+						io.to(`group:${groupId}`).emit('groupActiveUsers', Array.from(groupMembers[groupId].values()));
+					}
+				});
+			}
 			activeConnections.delete(socket.id);
 			io.emit('activeUsers', activeConnections.size);
 			console.log('A user disconnected', socket.id);
 		});
 		//--------------- disconnect event end here -------------||
 
-
-
-
+		// Attach user info to socket on connection (for disconnect cleanup)
+		socket.on('setUser', (user) => {
+			socket.user = user;
+		});
 	});
 	//--------------- socket.io connection end here ----------||
 
