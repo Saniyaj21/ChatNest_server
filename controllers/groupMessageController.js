@@ -11,7 +11,6 @@ cloudinary.config({
 // Save a group message
 export const saveGroupMessage = async (msg) => {
     try {
-        console.log('Saving group message:', msg);
         const user = await User.findOne({ userId: msg.userId });
         if (!user) throw new Error('User not found');
         
@@ -26,13 +25,10 @@ export const saveGroupMessage = async (msg) => {
             image: msg.image,
             imagePublicId: msg.imagePublicId
         };
-        console.log('Creating message with data:', messageData);
         
         const message = await GroupMessage.create(messageData);
-        console.log('Created message:', message);
         return message;
     } catch (error) {
-        console.error('Error saving group message:', error);
         throw error;
     }
 };
@@ -45,7 +41,6 @@ export const getGroupMessages = async (req, res) => {
             return res.status(400).json({ error: 'Group ID is required' });
         }
 
-        console.log('Fetching messages for group:', groupId);
         const messages = await GroupMessage.find({ groupId })
             .populate('user_id', 'userName userAvatar')
             .sort({ timestamp: 1 });
@@ -60,10 +55,8 @@ export const getGroupMessages = async (req, res) => {
             };
         });
 
-        console.log('Transformed messages:', transformedMessages);
         res.json(transformedMessages);
     } catch (error) {
-        console.error('Error fetching group messages:', error);
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
 };
@@ -85,7 +78,6 @@ export const deleteAllMessagesForGroup = async (groupId) => {
     // Delete messages from DB
     await GroupMessage.deleteMany({ groupId });
   } catch (error) {
-    console.error('Error deleting group messages:', error);
     throw error;
   }
 }; 

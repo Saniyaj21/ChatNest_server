@@ -3,7 +3,6 @@ import User from '../models/User.js';
 // Check if user exists by Clerk userId, create if not
 export const checkOrCreateUser = async (req, res) => {
   try {
-    console.log('Received user payload:', req.body);
     const { userId, name, userAvatar, userName, profilePicture, userEmail } = req.body;
     let user = await User.findOne({ userId });
     if (!user) {
@@ -11,7 +10,6 @@ export const checkOrCreateUser = async (req, res) => {
     }
     res.status(200).json({ user });
   } catch (error) {
-    console.error('Error in checkOrCreateUser:', error);
     res.status(500).json({ error: error.message, stack: error.stack });
   }
 };
@@ -49,7 +47,6 @@ export const updateUserProfile = async (req, res) => {
 export const searchUsersByEmail = async (req, res) => {
   try {
     const { email, excludeUserId } = req.query;
-    console.log('Received search query:', { email, excludeUserId });
     if (!email) return res.status(400).json({ error: 'email query is required' });
     const query = {
       userEmail: { $regex: email, $options: 'i' },
@@ -58,7 +55,6 @@ export const searchUsersByEmail = async (req, res) => {
       query.userId = { $ne: excludeUserId };
     }
     const users = await User.find(query, '_id name userName userEmail userAvatar');
-    console.log('Found users:', users);
     res.status(200).json({ users });
   } catch (error) {
     res.status(500).json({ error: error.message });

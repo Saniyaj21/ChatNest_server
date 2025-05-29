@@ -8,7 +8,6 @@ import User from '../models/User.js';
  */
 export const saveGlobalMessage = async (msg) => {
   try {
-    console.log('Saving global message:', msg);
     const user = await User.findOne({ userId: msg.userId });
     if (!user) throw new Error('User not found');
 
@@ -23,12 +22,9 @@ export const saveGlobalMessage = async (msg) => {
       imagePublicId: msg.imagePublicId
     };
 
-    console.log('Creating message with data:', messageData);
     const message = await GlobalMessage.create(messageData);
-    console.log('Created message:', message);
     return message;
   } catch (error) {
-    console.error('Error saving global message:', error);
     throw error;
   }
 };
@@ -49,7 +45,6 @@ export const getGlobalMessages = async (req, res) => {
 
     res.json(transformedMessages);
   } catch (error) {
-    console.error('Error fetching global messages:', error);
     res.status(500).json({ error: 'Failed to fetch messages' });
   }
 };

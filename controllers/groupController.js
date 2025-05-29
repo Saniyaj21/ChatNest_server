@@ -11,7 +11,6 @@ export const createGroup = async (req, res) => {
     if (!name || !createdBy) {
       return res.status(400).json({ error: 'name and createdBy are required' });
     }
-    console.log('Received group payload:', req.body);
     // Look up creator by Clerk userId
     const creator = await User.findOne({ userId: createdBy });
     if (!creator) {
@@ -72,16 +71,13 @@ export const getAcceptedGroups = async (req, res) => {
 export const getPendingInvites = async (req, res) => {
   try {
     const { userId } = req.query;
-    console.log('userId', userId);
     if (!userId) return res.status(400).json({ error: 'userId is required' });
     const user = await User.findOne({ userId });
-    console.log('user', user);
     if (!user) return res.status(404).json({ error: 'User not found' });
     const invites = await GroupMember.find({ userId: user._id, status: 'pending' })
       .populate('groupId')
       .populate('invitedBy');
     // Format invites with group and inviter info
-    console.log('invites', invites);
     const formatted = invites.map(invite => ({
       inviteId: invite._id,
       groupId: invite.groupId?._id,
@@ -141,8 +137,6 @@ export const getGroupMembers = async (req, res) => {
       status: 'accepted' 
     }).populate('userId');
 
-    console.log(memberships);
-    
     // Format the response
     const members = memberships.map(membership => ({
       _id: membership.userId._id,
@@ -154,7 +148,6 @@ export const getGroupMembers = async (req, res) => {
 
     res.status(200).json({ members });
   } catch (error) {
-    console.error('Error fetching group members:', error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -172,7 +165,6 @@ export const deleteGroup = async (req, res) => {
     await Group.findByIdAndDelete(groupId);
     res.status(200).json({ message: 'Group and all related data deleted' });
   } catch (error) {
-    console.error('Error deleting group:', error);
     res.status(500).json({ error: 'Failed to delete group' });
   }
 }; 

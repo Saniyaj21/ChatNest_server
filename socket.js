@@ -26,7 +26,6 @@ export default function setupSocket(server) {
 	io.on('connection', (socket) => {
 		activeConnections.add(socket.id);
 		io.emit('activeUsers', activeConnections.size);
-		console.log('A user connected', socket.id);
 		// You can add more socket event handlers here
 
 
@@ -43,7 +42,6 @@ export default function setupSocket(server) {
 				console.error('Failed to save global message:', err);
 			});
 			// Broadcast the message to all clients.
-			console.log('globalMessage event received', msg);
 			io.emit('globalMessage', msg);
 		});
 		//--------------- globalMessage event end here ----------||
@@ -51,13 +49,10 @@ export default function setupSocket(server) {
 		//--------------- groupMessage event start here --------||
 		socket.on('groupMessage', async (msg) => {
 			try {
-				console.log('Received group message:', msg);
 				// Save the message to the database
 				const savedMessage = await saveGroupMessage(msg);
-				console.log('Saved group message:', savedMessage);
 				// Broadcast the message to all clients in the group
 				io.emit(`groupMessage:${msg.groupId}`, msg);
-				console.log('Broadcasted message to group:', msg.groupId);
 			} catch (err) {
 				console.error('Failed to save group message:', err);
 			}
@@ -80,7 +75,6 @@ export default function setupSocket(server) {
 			}
 			// Broadcast typing status to all in the group except the sender
 			socket.broadcast.to(`group:${typingData.groupId}`).emit(`groupTyping:${typingData.groupId}`, typingData);
-			console.log(`Broadcasting typing status for group ${typingData.groupId}:`, typingData);
 		});
 		//--------------- groupTyping event end here ------------||
 
@@ -98,7 +92,6 @@ export default function setupSocket(server) {
 			socket.joinedGroups.add(groupId);
 			// Broadcast updated group members
 			io.to(`group:${groupId}`).emit('groupActiveUsers', Array.from(groupMembers[groupId].values()));
-			console.log(`User ${user.userId} joined group ${groupId}`);
 		});
 		//--------------- joinGroup event end here --------------||
 
@@ -114,7 +107,6 @@ export default function setupSocket(server) {
 				io.to(`group:${groupId}`).emit('groupActiveUsers', Array.from(groupMembers[groupId].values()));
 			}
 			if (socket.joinedGroups) socket.joinedGroups.delete(groupId);
-			console.log(`User ${user.userId} left group ${groupId}`);
 		});
 		//--------------- leaveGroup event end here -------------||
 
@@ -138,7 +130,6 @@ export default function setupSocket(server) {
 			}
 			activeConnections.delete(socket.id);
 			io.emit('activeUsers', activeConnections.size);
-			console.log('A user disconnected', socket.id);
 		});
 		//--------------- disconnect event end here -------------||
 
