@@ -1,5 +1,5 @@
 import express from 'express';
-import { createGroup, getAcceptedGroups, getPendingInvites, acceptInvite, rejectInvite, getGroupMembers } from '../controllers/groupController.js';
+import { createGroup, getAcceptedGroups, getPendingInvites, acceptInvite, rejectInvite, getGroupMembers, deleteGroup } from '../controllers/groupController.js';
 
 const router = express.Router();
 
@@ -15,5 +15,7 @@ router.post('/invites/accept', acceptInvite);
 router.post('/invites/reject', rejectInvite);
 // GET /groups/:groupId/members - get all members of a group
 router.get('/:groupId/members', getGroupMembers);
+// DELETE /groups/:groupId - delete a group and all its messages/images/members
+router.delete('/:groupId', deleteGroup);
 
 export default router; 

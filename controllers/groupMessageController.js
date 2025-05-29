@@ -1,5 +1,12 @@
 import GroupMessage from '../models/GroupMessage.js';
 import User from '../models/User.js';
+import { v2 as cloudinary } from 'cloudinary';
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // Save a group message
 export const saveGroupMessage = async (msg) => {
@@ -59,4 +66,26 @@ export const getGroupMessages = async (req, res) => {
         console.error('Error fetching group messages:', error);
         res.status(500).json({ error: 'Failed to fetch messages' });
     }
+};
+
+// Delete all messages for a group, including images from Cloudinary
+export const deleteAllMessagesForGroup = async (groupId) => {
+  try {
+    const messages = await GroupMessage.find({ groupId });
+    // Delete images from Cloudinary
+    for (const msg of messages) {
+      if (msg.imagePublicId) {
+        try {
+          await cloudinary.uploader.destroy(msg.imagePublicId);
+        } catch (err) {
+          console.error('Failed to delete image from Cloudinary:', err);
+        }
+      }
+    }
+    // Delete messages from DB
+    await GroupMessage.deleteMany({ groupId });
+  } catch (error) {
+    console.error('Error deleting group messages:', error);
+    throw error;
+  }
 }; 

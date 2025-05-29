@@ -1,6 +1,8 @@
 import Group from '../models/Group.js';
 import GroupMember from '../models/GroupMember.js';
 import User from '../models/User.js';
+import { deleteAllMessagesForGroup } from './groupMessageController.js';
+import GroupMessage from '../models/GroupMessage.js';
 
 // POST /groups - create group and send invites
 export const createGroup = async (req, res) => {
@@ -48,11 +50,19 @@ export const getAcceptedGroups = async (req, res) => {
     const user = await User.findOne({ userId });
     if (!user) return res.status(404).json({ error: 'User not found' });
     const memberships = await GroupMember.find({ userId: user._id, status: 'accepted' }).populate('groupId');
-    const groups = memberships.map(m => {
+    // For each group, fetch the last message
+    const groups = await Promise.all(memberships.map(async m => {
       const g = m.groupId;
-      return g ? { _id: g._id, name: g.name, createdBy: g.createdBy, createdAt: g.createdAt } : null;
-    }).filter(Boolean);
-    res.status(200).json({ groups });
+      if (!g) return null;
+      // Find the last message for this group
+      const lastMsg = await GroupMessage.findOne({ groupId: g._id }).sort({ timestamp: -1 });
+      let lastMessage = '';
+      if (lastMsg) {
+        lastMessage = lastMsg.image ? 'image' : (lastMsg.text || '');
+      }
+      return { _id: g._id, name: g.name, createdBy: g.createdBy, createdAt: g.createdAt, lastMessage };
+    }));
+    res.status(200).json({ groups: groups.filter(Boolean) });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -146,5 +156,23 @@ export const getGroupMembers = async (req, res) => {
   } catch (error) {
     console.error('Error fetching group members:', error);
     res.status(500).json({ error: error.message });
+  }
+};
+
+// DELETE /groups/:groupId - delete a group and all its messages/images/members
+export const deleteGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    if (!groupId) return res.status(400).json({ error: 'groupId is required' });
+    // Delete all group messages and their images
+    await deleteAllMessagesForGroup(groupId);
+    // Delete all group members
+    await GroupMember.deleteMany({ groupId });
+    // Delete the group itself
+    await Group.findByIdAndDelete(groupId);
+    res.status(200).json({ message: 'Group and all related data deleted' });
+  } catch (error) {
+    console.error('Error deleting group:', error);
+    res.status(500).json({ error: 'Failed to delete group' });
   }
 }; 
