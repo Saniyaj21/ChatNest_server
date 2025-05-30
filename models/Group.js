@@ -14,6 +14,12 @@ const groupSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  imageUrl: {
+    type: String,
+  },
+  imagePublicId: {
+    type: String,
+  },
 });
 
 const Group = mongoose.model('Group', groupSchema);

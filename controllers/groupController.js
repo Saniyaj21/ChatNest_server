@@ -4,6 +4,7 @@ import User from '../models/User.js';
 import { deleteAllMessagesForGroup } from './groupMessageController.js';
 import GroupMessage from '../models/GroupMessage.js';
 import { getSocketIO } from '../socketInstance.js';
+import cloudinary from '../utils/cloudinary.js';
 
 // POST /groups - create group and send invites
 export const createGroup = async (req, res) => {
@@ -65,7 +66,15 @@ export const getAcceptedGroups = async (req, res) => {
       if (lastMsg) {
         lastMessage = lastMsg.image ? 'image' : (lastMsg.text || '');
       }
-      return { _id: g._id, name: g.name, createdBy: g.createdBy, createdAt: g.createdAt, lastMessage };
+      return { 
+        _id: g._id, 
+        name: g.name, 
+        createdBy: g.createdBy, 
+        createdAt: g.createdAt, 
+        lastMessage,
+        imageUrl: g.imageUrl,
+        imagePublicId: g.imagePublicId
+      };
     }));
     res.status(200).json({ groups: groups.filter(Boolean) });
   } catch (error) {
@@ -172,5 +181,37 @@ export const deleteGroup = async (req, res) => {
     res.status(200).json({ message: 'Group and all related data deleted' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete group' });
+  }
+};
+
+// PUT /groups/:groupId/image - update group image
+export const updateGroupImage = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const { imageUrl, imagePublicId } = req.body;
+    
+    if (!groupId) return res.status(400).json({ error: 'groupId is required' });
+    if (!imageUrl) return res.status(400).json({ error: 'imageUrl is required' });
+
+    const group = await Group.findById(groupId);
+    if (!group) return res.status(404).json({ error: 'Group not found' });
+
+    // If there's an existing image, delete it from Cloudinary
+    if (group.imagePublicId) {
+      try {
+        await cloudinary.uploader.destroy(group.imagePublicId);
+      } catch (err) {
+        console.error('Failed to delete old image from Cloudinary:', err);
+      }
+    }
+
+    // Update group with new image
+    group.imageUrl = imageUrl;
+    group.imagePublicId = imagePublicId;
+    await group.save();
+
+    res.status(200).json({ group });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 }; 
